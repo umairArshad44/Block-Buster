@@ -1,0 +1,14 @@
+{
+  "name": "block-buster",
+  "version": "1.0.0",
+  "description": "Block Buster game with MySQL score leaderboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mysql2": "^3.10.0",
+    "dotenv": "^16.4.5"
+  }
+}
