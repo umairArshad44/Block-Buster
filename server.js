@@ -5,12 +5,8 @@ const mysql = require('mysql2/promise');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const PLAYER_NAME = process.env.PLAYER_NAME || 'Umair';
 
 app.use(express.json());
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'game.html'));
-});
 
 let pool;
 async function initDb(){
@@ -25,15 +21,22 @@ async function initDb(){
   });
 }
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'game.html'));
+});
+
 app.post('/api/score', async (req, res) => {
   try {
-    const { score, levelReached } = req.body;
+    const { score, levelReached, playerName } = req.body;
     if (typeof score !== 'number' || score < 0){
       return res.status(400).json({ error: 'Invalid score' });
     }
+    const name = (typeof playerName === 'string' && playerName.trim().length > 0)
+      ? playerName.trim().slice(0, 30)
+      : 'Player';
     await pool.execute(
       'INSERT INTO scores (player_name, score, level_reached) VALUES (?, ?, ?)',
-      [PLAYER_NAME, score, levelReached || 1]
+      [name, score, levelReached || 1]
     );
     res.json({ ok: true });
   } catch (err) {
