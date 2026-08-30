@@ -179,6 +179,7 @@
     <div class="overlay" id="overlay">
       <div class="overlay-text" id="overlayText">Block Buster</div>
       <div class="overlay-sub" id="overlaySub">Drag a block from below and drop it on the grid. Fill a full row or column to clear it.</div>
+      <input type="text" id="nameInput" placeholder="Your name" maxlength="30" style="width: 200px; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: var(--ivory); font-size: 14px; text-align: center;">
       <button class="action" id="overlayBtn">Start</button>
       <div class="leaderboard" id="leaderboardBox" style="display:none;">
         <h3>Top scores</h3>
@@ -217,7 +218,13 @@
   const restartBtn = document.getElementById('restartBtn');
   const leaderboardBox = document.getElementById('leaderboardBox');
   const lbList = document.getElementById('lbList');
+  const nameInput = document.getElementById('nameInput');
   const traySlots = [document.getElementById('slot0'), document.getElementById('slot1'), document.getElementById('slot2')];
+
+  try {
+    const savedName = localStorage.getItem('blockBusterPlayerName');
+    if (savedName) nameInput.value = savedName;
+  } catch (e){}
 
   const SIZE = 9;
   const CELL = canvas.width / SIZE;
@@ -302,6 +309,7 @@
     overlayText.textContent = title;
     overlaySub.textContent = sub;
     overlayBtn.textContent = btnLabel;
+    nameInput.style.display = (title === 'Block Buster') ? 'block' : 'none';
     overlay.classList.add('show');
   }
   function hideOverlay(){ overlay.classList.remove('show'); leaderboardBox.style.display = 'none'; }
@@ -543,7 +551,17 @@
   document.addEventListener('pointercancel', onPointerUp);
 
   overlayBtn.addEventListener('click', () => {
-    if (over){ initGame(); }
+    if (over){
+      initGame();
+      hideOverlay();
+      running = true;
+      render();
+      return;
+    }
+    const enteredName = nameInput.value.trim();
+    if (enteredName){
+      try { localStorage.setItem('blockBusterPlayerName', enteredName); } catch (e){}
+    }
     hideOverlay();
     running = true;
     render();
@@ -553,11 +571,12 @@
   async function submitScore(){
     if (scoreSubmitted) return;
     scoreSubmitted = true;
+    const nameToSend = nameInput.value.trim() || 'Player';
     try {
       await fetch('/api/score', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score: score, levelReached: level })
+        body: JSON.stringify({ score: score, levelReached: level, playerName: nameToSend })
       });
       const res = await fetch('/api/leaderboard');
       const rows = await res.json();
